@@ -1,0 +1,46 @@
+# Сборка Wavelet для iPhone на машине GitHub с macOS (на Windows iOS не собирается).
+# Запуск вручную: вкладка Actions → iOS → Run workflow.
+# Для установки на настоящий телефон нужна учётная запись разработчика Apple:
+# в секреты репозитория положить APPLE_DEVELOPMENT_TEAM (ID команды) — тогда собирается и для устройства.
+# Без неё собирается только для симулятора. Здесь не проверялось: нужен Mac или запуск на GitHub.
+
+name: iOS
+on:
+  workflow_dispatch:
+
+jobs:
+  ios:
+    runs-on: macos-latest
+    env:
+      APPLE_DEVELOPMENT_TEAM: ${{ secrets.APPLE_DEVELOPMENT_TEAM }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios, aarch64-apple-ios-sim, x86_64-apple-ios
+
+      - name: tauri-cli
+        run: cargo install tauri-cli --version "^2" --locked
+
+      - name: Проект Xcode
+        working-directory: app
+        run: cargo tauri ios init --ci
+
+      - name: Сборка для симулятора
+        if: env.APPLE_DEVELOPMENT_TEAM == ''
+        working-directory: app
+        run: cargo tauri ios build --target aarch64-sim --ci
+
+      - name: Сборка для iPhone
+        if: env.APPLE_DEVELOPMENT_TEAM != ''
+        working-directory: app
+        run: cargo tauri ios build --target aarch64 --ci
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Wavelet-ios
+          path: |
+            app/gen/apple/build/**/*.ipa
+            app/gen/apple/build/**/*.app
+          if-no-files-found: warn

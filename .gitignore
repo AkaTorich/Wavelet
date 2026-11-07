@@ -1,0 +1,7 @@
+target/
+app/gen/android/app/build/
+app/gen/android/.gradle/
+app/gen/android/buildSrc/build/
+app/gen/schemas/
+app/gen/android/app/src/main/jniLibs/
+app/gen/android/.kotlin/

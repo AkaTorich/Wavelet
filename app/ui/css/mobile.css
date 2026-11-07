@@ -1,0 +1,65 @@
+/* Узкое окно и телефон: вкладки снизу, крупные строки, короткая полоса проигрывателя. */
+
+@media (max-width: 1100px) {
+  :root { --queue-w: 300px; }
+  .thead, .track { grid-template-columns: 30px minmax(120px, 3fr) minmax(80px, 2fr) minmax(80px, 2fr) 52px 76px 30px; }
+  .thead span:nth-child(5), .track .yr { display: none; }
+}
+
+@media (max-width: 860px) {
+  :root { --nav-w: 190px; }
+  #bar { grid-template-columns: minmax(150px, 1fr) minmax(260px, 2fr) auto; gap: 12px; }
+  #volume { width: 70px; }
+  #queue { position: fixed; right: 0; top: 0; bottom: var(--bar-h); z-index: 30; background: var(--panel-solid); box-shadow: -10px 0 40px rgba(0, 0, 0, .4); }
+}
+
+@media (max-width: 720px) {
+  :root { --bar-h: 64px; --row-h: 58px; }
+  #app {
+    grid-template-columns: 1fr; grid-template-rows: 1fr var(--bar-h) auto;
+    grid-template-areas: "main" "bar" "tabs";
+  }
+  #nav { display: none; }
+  #tabs {
+    display: flex; justify-content: space-around; padding: 4px 4px max(env(safe-area-inset-bottom), 6px);
+    border-top: 1px solid var(--line); background: rgba(0, 0, 0, .3);
+  }
+  #tabs button {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 0; margin: 0;
+    border: 0; background: transparent; color: var(--dim); font: inherit; font-size: 10.5px; box-shadow: none; border-radius: 8px;
+  }
+  #tabs button .ic { width: 22px; height: 22px; }
+  #tabs button.selected { color: var(--accent); }
+  #top { padding: max(env(safe-area-inset-top), 10px) 12px 6px; }
+  #sort { min-width: 0; width: 44px; padding-right: 0; color: transparent; background-position: center; }
+  #sort option { color: var(--text); }
+  #view { padding: 0 8px 4px; }
+  .view-head .art { width: 92px; height: 92px; }
+  .view-head h1 { font-size: 20px; }
+
+  .thead { display: none; }
+  .track { grid-template-columns: 46px 1fr auto 36px; gap: 10px; padding: 0 2px 0 6px; }
+  .track .num, .track .art-col, .track .alb, .track .yr, .track > .ttl, .track .stars, .track > .art { display: none; }
+  .track .thumb { display: grid; width: 46px; height: 46px; border-radius: 6px; background: var(--panel) center/cover no-repeat; place-items: center; color: var(--dim); }
+  .track .thumb .ic { width: 18px; height: 18px; }
+  .track .thumb { grid-column: 1; grid-row: 1; }
+  .track .lines { display: block; min-width: 0; grid-column: 2; grid-row: 1; }
+  .track .dur { grid-column: 3; grid-row: 1; }
+  .track .row-more { grid-column: 4; grid-row: 1; opacity: .8; width: 36px; height: 36px; }
+  .track .lines div { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .track .lines .l2 { color: var(--dim); font-size: 12px; margin-top: 2px; }
+  .track.playing .lines .l1 { color: var(--accent); }
+
+  .cards { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px 12px; }
+  .cards.video { grid-template-columns: 1fr; }
+
+  #bar { grid-template-columns: minmax(0, 1fr) auto; gap: 4px; padding: 0 8px 0 10px; position: relative; }
+  #bar .transport .timeline, #btn-shuffle, #btn-repeat, #btn-prev, #bar .extras { display: none; }
+  #bar .transport { flex-direction: row; }
+  .cover { width: 44px; height: 44px; }
+  #bar::after { content: ''; position: absolute; left: 0; top: -1px; height: 2px; width: var(--progress, 0%); background: var(--accent); }
+  #queue { width: 100%; bottom: 0; top: 0; z-index: 45; }
+  #queue header { padding-top: max(env(safe-area-inset-top), 14px); }
+  .qitem .icon-btn { opacity: 1; }
+  #toast { bottom: calc(var(--bar-h) + 70px); }
+}
