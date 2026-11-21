@@ -163,7 +163,7 @@ function markNav() {
 }
 
 function buildNav() {
-  $('#nav-main').replaceChildren(...NAV.map(([view, ic, text]) =>
+  $('#nav-main').replaceChildren(el('button.nav-item#nav-now', {}, icon('viz'), el('span', { text: 'Now Playing' })), ...NAV.map(([view, ic, text]) =>
     el('button.nav-item', { 'data-view': view, onclick: () => ctx.go(view) }, icon(ic), el('span', { text }))));
   const cap = $('.nav-caption');
   cap.append(el('button.icon-btn', { title: 'New playlist', onclick: () => createPlaylist(ctx) }, icon('plus')));
@@ -284,12 +284,19 @@ async function main() {
       ctx.refreshNav();
       if (current.view === 'playlist' && current.params.id === id) ctx.reload();
     },
+    openArtist: (name) => ctx.go('artist', { name }),
+    onStage: (open) => {
+      $('#nav-now').classList.toggle('selected', open);
+      if (open) for (const b of document.querySelectorAll('[data-view].selected')) b.classList.remove('selected');
+      else markNav();
+    },
     openAlbum: (m) => (m.album ? ctx.go('album', { album: m.album, artist: m.album_artist || m.artist }) : ctx.go('folder', { dir: m.dir })),
     onTrack: () => {
       curList?.refresh();
       for (const c of document.querySelectorAll('.card[data-id]')) c.classList.toggle('playing', +c.dataset.id === player.current?.id);
     },
   });
+  $('#nav-now').addEventListener('click', () => ui.openNow());
   bindKeys(ui, queue);
   bindHistory(ui, queue);
   bindScan();

@@ -1,7 +1,7 @@
 // Полоса проигрывателя, видео на месте списка, полный экран и карточка «Сейчас играет» на телефоне.
 
 import { currentWindow } from './api.js';
-import { $, artistOf, fmtTime, isPhone, paintRange, setArt, setIcon, subline } from './util.js';
+import { $, artistOf, fmtTime, isPhone, paintRange, setArt, setIcon, subline, toast } from './util.js';
 import { Visualizer } from './viz.js';
 
 export function bindPlayerUI(player, hooks) {
@@ -31,6 +31,7 @@ export function bindPlayerUI(player, hooks) {
     $('#btn-full').hidden = !cur;
     $('#btn-viz').hidden = !cur || isVideo;
     viz.setCover(cur?.cover);
+    fillNow();
     $('#btn-addlist').hidden = !cur;
     if (isVideo && player.playing !== false) showStage(true);
     else if (!cur) showStage(false);
@@ -39,6 +40,8 @@ export function bindPlayerUI(player, hooks) {
     currentWindow()?.setTitle(document.title).catch(() => {});
     hooks.onTrack?.();
   });
+
+  player.addEventListener('queue', () => fillNow());
 
   player.addEventListener('state', () => {
     const name = player.playing ? 'pause' : 'play';
@@ -98,6 +101,9 @@ export function bindPlayerUI(player, hooks) {
   click('#btn-video', () => showStage(stage.hidden));
   click('#btn-viz', () => showStage(stage.hidden));
   click('#viz-mode', () => cycleViz());
+  click('#np-artist', () => { const cur = player.current; if (cur && artistOf(cur)) hooks.openArtist?.(artistOf(cur)); });
+  click('#np-album', () => { const cur = player.current; if (cur) hooks.openAlbum?.(cur); });
+  click('#np-next', () => player.next());
   $('#viz').addEventListener('click', () => cycleViz());
   $('#viz').addEventListener('dblclick', () => toggleFull());
   click('#stage-close', () => showStage(false));
@@ -113,8 +119,7 @@ export function bindPlayerUI(player, hooks) {
     if (isPhone()) {
       if (cur.kind === 'video') showStage(true);
       else { $('#sheet').hidden = false; viz.start(); }
-    } else if (cur.kind === 'video') showStage(true);
-    else hooks.openAlbum?.(cur);
+    } else showStage(true);
   });
 
   $('#volume').addEventListener('input', (e) => { player.setVolume(e.target.value / 100); paintRange(e.target); });
@@ -152,12 +157,33 @@ export function bindPlayerUI(player, hooks) {
     stage.hidden = !(on && cur);
     const vizOn = !stage.hidden && !isVideo;
     $('#viz').hidden = !vizOn;
+    $('#np-info').hidden = !vizOn;
     $('#viz-mode').hidden = !vizOn;
     stage.classList.toggle('viz', vizOn);
     $('#btn-video').classList.toggle('on', !stage.hidden && isVideo);
     $('#btn-viz').classList.toggle('on', vizOn);
     if (vizOn) { $('#viz-mode').textContent = viz.mode; viz.start(); }
     if (stage.hidden && document.body.classList.contains('full')) setFull(false);
+    hooks.onStage?.(!stage.hidden);
+  }
+
+  /** Экран «Now Playing»: обложка, название, исполнитель, альбом и что дальше — поверх визуализации. */
+  function fillNow() {
+    const cur = player.current;
+    if (!cur) return;
+    setArt($('#np-cover'), cur.cover, cur.kind === 'video' ? 'video' : 'music');
+    $('#np-title').textContent = cur.title;
+    $('#np-artist').textContent = artistOf(cur);
+    $('#np-album').textContent = [cur.album, cur.year].filter(Boolean).join(' · ');
+    const next = player.queue[player.index + 1];
+    $('#np-next').hidden = !next;
+    $('#np-next-title').textContent = next ? [next.title, artistOf(next)].filter(Boolean).join(' — ') : '';
+  }
+
+  /** Пункт «Now Playing» в боковой панели. */
+  function openNow() {
+    if (!player.current) { toast('Nothing playing'); return; }
+    showStage(true);
   }
 
   function cycleViz() {
@@ -187,5 +213,5 @@ export function bindPlayerUI(player, hooks) {
     setFull(!document.body.classList.contains('full'));
   }
 
-  return { showStage, toggleFull, toggleViz, setFull, isFull: () => document.body.classList.contains('full') };
+  return { showStage, openNow, toggleFull, toggleViz, setFull, isFull: () => document.body.classList.contains('full') };
 }
