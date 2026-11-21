@@ -4,6 +4,7 @@ import { api, pickFolder } from '../api.js';
 import { ask } from '../menu.js';
 import { el, fmtLong, fmtSize, icon, plural, toast } from '../util.js';
 import { head } from './common.js';
+import { colors, PRESETS, resetRole, ROLES, setColors } from '../colors.js';
 
 async function addAndScan(ctx, path) {
   try {
@@ -74,5 +75,31 @@ export async function settings(ctx) {
 
   return el('div', { style: { display: 'contents' } },
     head({ title: 'Settings' }),
-    el('div.settings', {}, fsec, ssec, ksec, ver));
+    el('div.settings', {}, fsec, colorSection(), ssec, ksec, ver));
+}
+
+// ── цвета: готовые схемы и по одному цвету на роль ──
+function colorSection() {
+  const sec = el('section.colors');
+  const draw = () => {
+    const now = colors();
+    const same = (p) => ROLES.every((r) => p.c[r.id].toLowerCase() === now[r.id].toLowerCase());
+    const presets = el('div.presets', {}, PRESETS.map((p) =>
+      el('button.preset' + (same(p) ? '.on' : ''), { type: 'button', title: p.name, onclick: () => { setColors(p.c); draw(); } },
+        el('span.swatches', {}, ['bg', 'accent', 'accent2', 'danger'].map((k) => el('i', { style: { background: p.c[k] } }))),
+        el('span', { text: p.name }))));
+    const rows = el('div.color-rows', {}, ROLES.map((r) => {
+      const input = el('input', { type: 'color', value: now[r.id] });
+      const code = el('span.code', { text: now[r.id] });
+      input.addEventListener('input', () => { code.textContent = input.value; setColors({ [r.id]: input.value }); });
+      input.addEventListener('change', () => draw());
+      const changed = now[r.id].toLowerCase() !== PRESETS[0].c[r.id];
+      return el('div.color-row', {}, el('span', { text: r.name }), input, code,
+        el('button.icon-btn', { type: 'button', title: 'Default', hidden: !changed, onclick: () => { resetRole(r.id); draw(); } }, icon('rescan')));
+    }));
+    sec.replaceChildren(el('h2', { text: 'Colors' }), presets, rows,
+      el('div.row', {}, el('button', { type: 'button', onclick: () => { setColors(null); draw(); } }, icon('rescan'), 'Reset to default')));
+  };
+  draw();
+  return sec;
 }

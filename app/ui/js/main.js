@@ -7,6 +7,7 @@ import { Player } from './player.js';
 import { bindPlayerUI } from './playerui.js';
 import { bindQueue } from './queue.js';
 import { bindTitlebar } from './titlebar.js';
+import { initColors } from './colors.js';
 import { $, debounce, el, icon, isPhone, plural, toast } from './util.js';
 import { DRAG_TYPE } from './vlist.js';
 import * as lib from './views/library.js';
@@ -270,6 +271,7 @@ function bindScan() {
 document.addEventListener('contextmenu', (e) => { if (!e.target.closest('input, textarea')) e.preventDefault(); });
 
 async function main() {
+  initColors();
   const os = await api.platform().catch(() => 'windows');
   ctx.desktop = !['android', 'ios'].includes(os);
   document.body.classList.add(ctx.desktop ? 'desktop' : 'mobile');
