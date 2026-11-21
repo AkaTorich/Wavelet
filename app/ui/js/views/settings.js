@@ -8,7 +8,7 @@ import { head } from './common.js';
 async function addAndScan(ctx, path) {
   try {
     const added = await api.addFolder(path);
-    if (!added) { toast('Эта папка уже входит в библиотеку'); return; }
+    if (!added) { toast('This folder is already in the library'); return; }
     await api.startScan();
     ctx.reload();
   } catch (e) {
@@ -21,58 +21,58 @@ export async function settings(ctx) {
   const [folders, stats, suggested] = await Promise.all([api.folders(), api.stats(), api.defaultFolders()]);
 
   // ── папки ──
-  const fsec = el('section', {}, el('h2', { text: 'Папки библиотеки' }));
-  if (!folders.length) fsec.append(el('p.dim', { text: 'Пока ни одной. Добавьте папки с музыкой и видео — программа обойдёт их и составит библиотеку.' }));
+  const fsec = el('section', {}, el('h2', { text: 'Library folders' }));
+  if (!folders.length) fsec.append(el('p.dim', { text: 'None yet. Add folders with music and video — Wavelet will scan them and build the library.' }));
   for (const f of folders) {
     fsec.append(el('div.folder-row', {}, icon('folder'), el('span', { text: f, title: f }),
-      el('button.icon-btn', { title: 'Убрать из библиотеки', onclick: async () => {
-        if (!(await ask('Убрать папку?', `${f}\nЗаписи из неё уйдут из библиотеки, файлы останутся на месте.`, 'Убрать', true))) return;
+      el('button.icon-btn', { title: 'Remove from library', onclick: async () => {
+        if (!(await ask('Remove folder?', `${f}\nIts tracks leave the library; the files stay where they are.`, 'Remove', true))) return;
         const n = await api.removeFolder(f);
-        toast(`Убрано: ${plural(n, 'запись', 'записи', 'записей')}`);
+        toast(`Removed: ${plural(n, 'track', 'tracks')}`);
         ctx.reload();
       } }, icon('close'))));
   }
-  const pathInput = el('input', { type: 'text', placeholder: ctx.desktop ? 'Путь к папке' : '/storage/emulated/0/Music' });
+  const pathInput = el('input', { type: 'text', placeholder: ctx.desktop ? 'Folder path' : '/storage/emulated/0/Music' });
   const row = el('div.row', {},
     ctx.desktop ? el('button.tl-accent', { onclick: async () => {
-      const p = await pickFolder('Папка с музыкой или видео');
+      const p = await pickFolder('Folder with music or video');
       if (p) addAndScan(ctx, p);
-    } }, icon('plus'), 'Добавить папку') : null,
+    } }, icon('plus'), 'Add folder') : null,
     pathInput,
-    el('button', { onclick: () => { if (pathInput.value.trim()) addAndScan(ctx, pathInput.value.trim()); } }, 'Добавить путь'),
+    el('button', { onclick: () => { if (pathInput.value.trim()) addAndScan(ctx, pathInput.value.trim()); } }, 'Add path'),
     folders.length ? el('button', { onclick: async () => {
-      if (await api.startScan()) toast('Обход папок начат'); else toast('Обход уже идёт');
-    } }, icon('rescan'), 'Обойти заново') : null);
+      if (await api.startScan()) toast('Scan started'); else toast('A scan is already running');
+    } }, icon('rescan'), 'Rescan') : null);
   fsec.append(row);
   const fresh = suggested.filter((s) => !folders.some((f) => s.toLowerCase().startsWith(f.toLowerCase())));
   if (fresh.length) {
-    fsec.append(el('div.row', {}, el('span.dim', { text: 'Предложить:' }),
+    fsec.append(el('div.row', {}, el('span.dim', { text: 'Suggested:' }),
       fresh.map((s) => el('button', { onclick: () => addAndScan(ctx, s) }, icon('plus'), s.split(/[\\/]/).pop()))));
   }
 
   // ── итог ──
-  const ssec = el('section', {}, el('h2', { text: 'Библиотека' }), el('div.stat-grid', {},
-    el('div', {}, el('b', { text: String(stats.audio) }), 'музыкальных записей'),
-    el('div', {}, el('b', { text: String(stats.video) }), 'видео'),
-    el('div', {}, el('b', { text: String(stats.albums) }), 'альбомов'),
-    el('div', {}, el('b', { text: String(stats.artists) }), 'исполнителей'),
-    el('div', {}, el('b', { text: fmtLong(stats.duration) }), 'всего звучания'),
-    el('div', {}, el('b', { text: fmtSize(stats.size) }), 'на диске')));
+  const ssec = el('section', {}, el('h2', { text: 'Library' }), el('div.stat-grid', {},
+    el('div', {}, el('b', { text: String(stats.audio) }), 'music tracks'),
+    el('div', {}, el('b', { text: String(stats.video) }), 'videos'),
+    el('div', {}, el('b', { text: String(stats.albums) }), 'albums'),
+    el('div', {}, el('b', { text: String(stats.artists) }), 'artists'),
+    el('div', {}, el('b', { text: fmtLong(stats.duration) }), 'total playtime'),
+    el('div', {}, el('b', { text: fmtSize(stats.size) }), 'on disk')));
 
 
   // ── клавиши ──
   const keys = [
-    ['Пробел', 'играть / пауза'], ['← →', 'перемотка на 5 с (с Shift — на 30 с)'], ['Ctrl + ← →', 'предыдущая / следующая'],
-    ['↑ ↓', 'громкость (в списке — выбор строки)'], ['F', 'видео во весь экран'], ['M', 'звук вкл/выкл'],
-    ['Ctrl + F', 'поиск'], ['Q', 'очередь'], ['Esc', 'выйти из полного экрана'],
+    ['Space', 'play / pause'], ['← →', 'seek 5 s (30 s with Shift)'], ['Ctrl + ← →', 'previous / next'],
+    ['↑ ↓', 'volume (in a list — select a row)'], ['F', 'full screen (video or visualizer)'], ['V', 'visualizer'], ['M', 'sound on/off'],
+    ['Ctrl + F', 'search'], ['Q', 'queue'], ['Esc', 'leave full screen'],
   ];
-  const ksec = ctx.desktop ? el('section', {}, el('h2', { text: 'Клавиши' }),
+  const ksec = ctx.desktop ? el('section', {}, el('h2', { text: 'Keys' }),
     el('div.keys', {}, keys.flatMap(([k, v]) => [el('kbd', { text: k }), el('span', { text: v })]))) : null;
 
   const ver = el('section', {}, el('h2', { text: 'Wavelet 1.0.0' }),
-    el('div.dim', { text: 'Музыка: MP3, FLAC, OGG, Opus, M4A, AAC, WAV. Видео: MP4 (H.264), M4V, MOV, WebM. Субтитры .srt и .vtt рядом с видео.' }));
+    el('div.dim', { text: 'Music: MP3, FLAC, OGG, Opus, M4A, AAC, WAV. Video: MP4 (H.264), M4V, MOV, WebM. .srt and .vtt subtitles next to the video.' }));
 
   return el('div', { style: { display: 'contents' } },
-    head({ title: 'Настройки' }),
+    head({ title: 'Settings' }),
     el('div.settings', {}, fsec, ssec, ksec, ver));
 }

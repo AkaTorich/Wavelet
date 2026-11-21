@@ -14,13 +14,13 @@ export function bindQueue(player, ctx) {
       const cls = i === player.index ? '.current' : i < player.index ? '.past' : '';
       return el('div.qitem' + cls, {}, c,
         el('div.qx', {}, el('div.qt', { text: m.title }), el('div.qs', { text: subline(m) })),
-        el('button.icon-btn', { title: 'Убрать', onclick: (e) => { e.stopPropagation(); player.remove(i); } }, icon('close')));
+        el('button.icon-btn', { title: 'Remove', onclick: (e) => { e.stopPropagation(); player.remove(i); } }, icon('close')));
     },
     onOpen: (i) => player.jump(i),
     onReorder: (from, to) => player.move(from, to),
     onMenu: (e, sel, i) => showMenu(e.clientX, e.clientY, [
-      { icon: 'play', text: 'Играть отсюда', run: () => player.jump(i) },
-      { icon: 'close', text: sel.length > 1 ? `Убрать (${sel.length})` : 'Убрать из очереди', run: () => {
+      { icon: 'play', text: 'Play from here', run: () => player.jump(i) },
+      { icon: 'close', text: sel.length > 1 ? `Remove (${sel.length})` : 'Remove from queue', run: () => {
         const idx = sel.map((m) => player.queue.indexOf(m)).sort((a, b) => b - a);
         for (const k of idx) player.remove(k);
       } },
@@ -33,7 +33,7 @@ export function bindQueue(player, ctx) {
   const draw = (keepScroll = true) => {
     list.setItems(player.queue, keepScroll);
     const left = player.queue.slice(Math.max(0, player.index)).reduce((s, m) => s + (m.duration || 0), 0);
-    $('#queue-info').textContent = player.queue.length ? `${plural(player.queue.length, 'запись', 'записи', 'записей')} · ${fmtLong(left)}` : 'пусто';
+    $('#queue-info').textContent = player.queue.length ? `${plural(player.queue.length, 'track', 'tracks')} · ${fmtLong(left)}` : 'empty';
   };
   player.addEventListener('queue', () => draw());
   player.addEventListener('track', () => { list.refresh(); if (!panel.hidden && player.index >= 0) list.scrollTo(player.index); });
@@ -41,11 +41,11 @@ export function bindQueue(player, ctx) {
   $('#queue-clear').addEventListener('click', () => player.clear());
   $('#queue-save').addEventListener('click', async () => {
     if (!player.queue.length) return;
-    const name = await prompt('Сохранить очередь как список', 'Очередь ' + new Date().toLocaleDateString('ru-RU'));
+    const name = await prompt('Save queue as playlist', 'Queue ' + new Date().toLocaleDateString('en-GB'));
     if (!name) return;
     const id = await api.playlistCreate(name);
     await api.playlistAdd(id, player.queue.map((m) => m.id));
-    toast(`Список «${name}» сохранён`);
+    toast(`Playlist “${name}” saved`);
     ctx.refreshNav();
   });
 

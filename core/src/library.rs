@@ -19,10 +19,10 @@ pub fn folders(conn: &Connection) -> Result<Vec<String>> {
 pub fn add_folder(conn: &Connection, path: &str) -> Result<bool> {
     let p = path.trim().trim_end_matches(['\\', '/']).to_string();
     if p.is_empty() {
-        return Err(Error::msg("пустой путь"));
+        return Err(Error::msg("empty path"));
     }
     if !Path::new(&p).is_dir() {
-        return Err(Error::msg(format!("папки нет: {p}")));
+        return Err(Error::msg(format!("folder not found: {p}")));
     }
     for f in folders(conn)? {
         if Path::new(&p).starts_with(&f) {
@@ -158,7 +158,7 @@ pub fn add_tag(conn: &mut Connection, ids: &[i64], name: &str) -> Result<()> {
 /// Пишет теги в файл (только музыка) и в базу. Время изменения файла запоминается,
 /// чтобы следующий обход не принял файл за изменённый снаружи.
 pub fn edit_tags(conn: &Connection, id: i64, edit: &TagEdit) -> Result<Media> {
-    let m = get(conn, id)?.ok_or_else(|| Error::msg("записи нет"))?;
+    let m = get(conn, id)?.ok_or_else(|| Error::msg("no such track"))?;
     let path = Path::new(&m.path);
     if m.kind == "audio" {
         tags::write_audio(path, edit)?;
@@ -192,7 +192,7 @@ pub fn edit_tags(conn: &Connection, id: i64, edit: &TagEdit) -> Result<Media> {
             id
         ],
     )?;
-    get(conn, id)?.ok_or_else(|| Error::msg("записи нет"))
+    get(conn, id)?.ok_or_else(|| Error::msg("no such track"))
 }
 
 // ── настройки ────────────────────────────────────────────────────────────

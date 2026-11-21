@@ -2,17 +2,21 @@
 
 import { currentWindow } from './api.js';
 import { $, artistOf, fmtTime, isPhone, paintRange, setArt, setIcon, subline } from './util.js';
+import { Visualizer } from './viz.js';
 
 export function bindPlayerUI(player, hooks) {
   const m = player.m;
   const stage = $('#stage');
   let seeking = false;
   let uiTimer = 0;
+  const viz = new Visualizer(m);
+  viz.attach($('#viz'));
+  viz.attach($('#sheet-viz'), () => 'Spectrum');
 
   // ── что играет ──
   player.addEventListener('track', () => {
     const cur = player.current;
-    const title = cur ? cur.title : 'Ничего не играет';
+    const title = cur ? cur.title : 'Nothing playing';
     const sub = cur ? (cur.kind === 'video' ? subline(cur) : [artistOf(cur), cur.album].filter(Boolean).join(' · ')) : '';
     $('#now-title').textContent = title;
     $('#now-sub').textContent = sub;
@@ -24,10 +28,13 @@ export function bindPlayerUI(player, hooks) {
     setArt($('#sheet-cover'), cur?.cover, icon);
     const isVideo = cur?.kind === 'video';
     $('#btn-video').hidden = !isVideo;
-    $('#btn-full').hidden = !isVideo;
+    $('#btn-full').hidden = !cur;
+    $('#btn-viz').hidden = !cur || isVideo;
+    viz.setCover(cur?.cover);
     $('#btn-addlist').hidden = !cur;
     if (isVideo && player.playing !== false) showStage(true);
-    if (!isVideo) { showStage(false); if (document.body.classList.contains('full')) setFull(false); }
+    else if (!cur) showStage(false);
+    else if (!stage.hidden) showStage(true); // открытое место видео переходит в визуализацию и обратно
     document.title = cur ? `${cur.title} — Wavelet` : 'Wavelet';
     currentWindow()?.setTitle(document.title).catch(() => {});
     hooks.onTrack?.();
@@ -37,7 +44,7 @@ export function bindPlayerUI(player, hooks) {
     const name = player.playing ? 'pause' : 'play';
     setIcon($('#btn-play'), name);
     setIcon($('#s-play'), name);
-    $('#btn-play').title = player.playing ? 'Пауза' : 'Играть';
+    $('#btn-play').title = player.playing ? 'Pause' : 'Play';
   });
 
   player.addEventListener('time', () => {
@@ -58,7 +65,7 @@ export function bindPlayerUI(player, hooks) {
       $(id).classList.toggle('on', player.repeat !== 'off');
       setIcon($(id), player.repeat === 'one' ? 'repeat-one' : 'repeat');
     }
-    $('#btn-repeat').title = { off: 'Повтор выключен', all: 'Повтор всей очереди', one: 'Повтор одной записи' }[player.repeat];
+    $('#btn-repeat').title = { off: 'Repeat off', all: 'Repeat queue', one: 'Repeat one' }[player.repeat];
   });
 
   player.addEventListener('volume', () => {
@@ -89,6 +96,10 @@ export function bindPlayerUI(player, hooks) {
   click('#btn-mute', () => player.toggleMute());
   click('#btn-subs', () => player.setSubtitles(!player.subsOn));
   click('#btn-video', () => showStage(stage.hidden));
+  click('#btn-viz', () => showStage(stage.hidden));
+  click('#viz-mode', () => cycleViz());
+  $('#viz').addEventListener('click', () => cycleViz());
+  $('#viz').addEventListener('dblclick', () => toggleFull());
   click('#stage-close', () => showStage(false));
   click('#btn-full', () => toggleFull());
   click('#sheet-close', () => ($('#sheet').hidden = true));
@@ -101,7 +112,7 @@ export function bindPlayerUI(player, hooks) {
     if (!cur) return;
     if (isPhone()) {
       if (cur.kind === 'video') showStage(true);
-      else $('#sheet').hidden = false;
+      else { $('#sheet').hidden = false; viz.start(); }
     } else if (cur.kind === 'video') showStage(true);
     else hooks.openAlbum?.(cur);
   });
@@ -137,9 +148,27 @@ export function bindPlayerUI(player, hooks) {
   }
 
   function showStage(on) {
-    const isVideo = player.current?.kind === 'video';
-    stage.hidden = !(on && isVideo);
-    $('#btn-video').classList.toggle('on', !stage.hidden);
+    const cur = player.current, isVideo = cur?.kind === 'video';
+    stage.hidden = !(on && cur);
+    const vizOn = !stage.hidden && !isVideo;
+    $('#viz').hidden = !vizOn;
+    $('#viz-mode').hidden = !vizOn;
+    stage.classList.toggle('viz', vizOn);
+    $('#btn-video').classList.toggle('on', !stage.hidden && isVideo);
+    $('#btn-viz').classList.toggle('on', vizOn);
+    if (vizOn) { $('#viz-mode').textContent = viz.mode; viz.start(); }
+    if (stage.hidden && document.body.classList.contains('full')) setFull(false);
+  }
+
+  function cycleViz() {
+    $('#viz-mode').textContent = viz.nextMode();
+    poke();
+  }
+
+  /** V: открыть / закрыть визуализацию музыки. */
+  function toggleViz() {
+    if (!player.current || player.current.kind === 'video') return;
+    showStage(stage.hidden);
   }
 
   async function setFull(on) {
@@ -154,9 +183,9 @@ export function bindPlayerUI(player, hooks) {
   }
 
   function toggleFull() {
-    if (player.current?.kind !== 'video') return;
+    if (!player.current) return;
     setFull(!document.body.classList.contains('full'));
   }
 
-  return { showStage, toggleFull, setFull, isFull: () => document.body.classList.contains('full') };
+  return { showStage, toggleFull, toggleViz, setFull, isFull: () => document.body.classList.contains('full') };
 }

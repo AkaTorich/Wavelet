@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -43,43 +43,58 @@
   <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 6-5.3-2.9-5.3 2.9 1.1-6L3.4 9.5l6-.8z"/></symbol>
   <symbol id="i-rescan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v5h-5"/></symbol>
   <symbol id="i-wave" viewBox="0 0 48 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12c4 0 5-1 7 1s2 4 4 1 2-11 5-11 3 18 6 18 3-14 6-14 2.5 7 4.5 7 3-2 5-2 3 0 6 0"/></symbol>
-  <symbol id="i-sub" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M7 13h4M13 13h4M7 16h7"/></symbol>
+  <symbol id="i-win-min" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 12.5h12"/></symbol>
+  <symbol id="i-win-max" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="6.5" y="6.5" width="11" height="11"/></symbol>
+  <symbol id="i-win-restore" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="6" y="8.5" width="9.5" height="9.5"/><path d="M8.5 8.5V6h9.5v9.5h-2.5"/></symbol>
+  <symbol id="i-viz" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 14v4M8 9v9M12 5v13M16 10v8M20 13v5"/><path d="M3 21h18" opacity=".5"/></symbol>
+  <symbol id="i-win-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 7l10 10M17 7 7 17"/></symbol>
+  <symbol id="i-sub"viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M7 13h4M13 13h4M7 16h7"/></symbol>
 </svg>
+
+<header id="titlebar" data-tauri-drag-region>
+  <svg class="tb-logo" data-tauri-drag-region><use href="#i-wave"/></svg>
+  <span id="tb-title" data-tauri-drag-region>Wavelet</span>
+  <button class="tb-btn" id="tb-min" title="Minimize"><svg class="ic"><use href="#i-win-min"/></svg></button>
+  <button class="tb-btn" id="tb-max" title="Maximize"><svg class="ic"><use href="#i-win-max"/></svg></button>
+  <button class="tb-btn close" id="tb-close" title="Close"><svg class="ic"><use href="#i-win-close"/></svg></button>
+</header>
 
 <div id="app">
   <aside id="nav">
     <div class="brand"><svg class="logo"><use href="#i-wave"/></svg><span>Wavelet</span></div>
     <div class="nav-group" id="nav-main"></div>
-    <div class="nav-caption">Списки</div>
+    <div class="nav-caption">Playlists</div>
     <div class="nav-group" id="nav-playlists"></div>
     <div id="scan-status" hidden>
-      <div class="scan-line"><span class="led"></span><span id="scan-text">Обход папок…</span></div>
+      <div class="scan-line"><span class="led"></span><span id="scan-text">Scanning folders…</span></div>
       <progress id="scan-bar" max="1" value="0"></progress>
     </div>
   </aside>
 
   <main id="main">
     <header id="top">
-      <button class="icon-btn" id="back" title="Назад" hidden><svg class="ic"><use href="#i-back"/></svg></button>
+      <button class="icon-btn" id="back" title="Back" hidden><svg class="ic"><use href="#i-back"/></svg></button>
       <div class="search-box">
         <svg class="ic"><use href="#i-search"/></svg>
         <input id="search" type="search" autocomplete="off" spellcheck="false"
-               placeholder="Поиск: название, исполнитель, альбом, жанр, метка…">
+               placeholder="Search: title, artist, album, genre, label…">
       </div>
-      <select id="sort" title="Порядок"></select>
+      <select id="sort" title="Sort"></select>
     </header>
     <section id="view"></section>
     <section id="stage" hidden>
-      <video id="media" playsinline preload="metadata"></video>
+      <video id="media" playsinline preload="metadata" crossorigin="anonymous"></video>
+      <canvas id="viz" hidden title="Click — next style, double click — full screen"></canvas>
       <div id="stage-title"></div>
-      <button class="icon-btn" id="stage-close" title="Свернуть видео"><svg class="ic"><use href="#i-down"/></svg></button>
+      <button class="tb-chip" id="viz-mode" hidden title="Next style (V)"></button>
+      <button class="icon-btn" id="stage-close" title="Minimize"><svg class="ic"><use href="#i-down"/></svg></button>
     </section>
   </main>
 
   <aside id="queue" hidden>
-    <header><h2>Очередь</h2><span id="queue-info" class="dim"></span>
-      <button class="icon-btn" id="queue-save" title="Сохранить как список"><svg class="ic"><use href="#i-list"/></svg></button>
-      <button class="icon-btn" id="queue-clear" title="Очистить"><svg class="ic"><use href="#i-close"/></svg></button>
+    <header><h2>Queue</h2><span id="queue-info" class="dim"></span>
+      <button class="icon-btn" id="queue-save" title="Save as playlist"><svg class="ic"><use href="#i-list"/></svg></button>
+      <button class="icon-btn" id="queue-clear" title="Clear"><svg class="ic"><use href="#i-close"/></svg></button>
     </header>
     <div id="queue-list"></div>
   </aside>
@@ -87,15 +102,15 @@
   <footer id="bar">
     <div class="now" id="now">
       <div class="cover" id="now-cover"></div>
-      <div class="now-text"><div id="now-title" class="title">Ничего не играет</div><div id="now-sub" class="dim"></div></div>
+      <div class="now-text"><div id="now-title" class="title">Nothing playing</div><div id="now-sub" class="dim"></div></div>
     </div>
     <div class="transport">
       <div class="buttons">
-        <button class="icon-btn" id="btn-shuffle" title="Перемешать"><svg class="ic"><use href="#i-shuffle"/></svg></button>
-        <button class="icon-btn" id="btn-prev" title="Предыдущая"><svg class="ic"><use href="#i-prev"/></svg></button>
-        <button class="icon-btn play" id="btn-play" title="Играть"><svg class="ic"><use href="#i-play"/></svg></button>
-        <button class="icon-btn" id="btn-next" title="Следующая"><svg class="ic"><use href="#i-next"/></svg></button>
-        <button class="icon-btn" id="btn-repeat" title="Повтор"><svg class="ic"><use href="#i-repeat"/></svg></button>
+        <button class="icon-btn" id="btn-shuffle" title="Shuffle"><svg class="ic"><use href="#i-shuffle"/></svg></button>
+        <button class="icon-btn" id="btn-prev" title="Previous"><svg class="ic"><use href="#i-prev"/></svg></button>
+        <button class="icon-btn play" id="btn-play" title="Play"><svg class="ic"><use href="#i-play"/></svg></button>
+        <button class="icon-btn" id="btn-next" title="Next"><svg class="ic"><use href="#i-next"/></svg></button>
+        <button class="icon-btn" id="btn-repeat" title="Repeat"><svg class="ic"><use href="#i-repeat"/></svg></button>
       </div>
       <div class="timeline">
         <span id="t-cur" class="time">0:00</span>
@@ -104,13 +119,14 @@
       </div>
     </div>
     <div class="extras">
-      <button class="icon-btn" id="btn-video" title="Показать видео" hidden><svg class="ic"><use href="#i-video"/></svg></button>
-      <button class="icon-btn" id="btn-subs" title="Субтитры" hidden><svg class="ic"><use href="#i-sub"/></svg></button>
-      <button class="icon-btn" id="btn-full" title="Во весь экран (F)" hidden><svg class="ic"><use href="#i-full"/></svg></button>
-      <button class="icon-btn" id="btn-addlist" title="Добавить в список" hidden><svg class="ic"><use href="#i-plus"/></svg></button>
-      <button class="icon-btn" id="btn-queue" title="Очередь"><svg class="ic"><use href="#i-queue"/></svg></button>
-      <button class="icon-btn" id="btn-mute" title="Звук"><svg class="ic"><use href="#i-volume"/></svg></button>
-      <input id="volume" type="range" min="0" max="100" value="80" title="Громкость">
+      <button class="icon-btn" id="btn-viz" title="Visualizer (V)" hidden><svg class="ic"><use href="#i-viz"/></svg></button>
+      <button class="icon-btn" id="btn-video" title="Show video" hidden><svg class="ic"><use href="#i-video"/></svg></button>
+      <button class="icon-btn" id="btn-subs" title="Subtitles" hidden><svg class="ic"><use href="#i-sub"/></svg></button>
+      <button class="icon-btn" id="btn-full" title="Full screen (F)" hidden><svg class="ic"><use href="#i-full"/></svg></button>
+      <button class="icon-btn" id="btn-addlist" title="Add to playlist" hidden><svg class="ic"><use href="#i-plus"/></svg></button>
+      <button class="icon-btn" id="btn-queue" title="Queue"><svg class="ic"><use href="#i-queue"/></svg></button>
+      <button class="icon-btn" id="btn-mute" title="Mute"><svg class="ic"><use href="#i-volume"/></svg></button>
+      <input id="volume" type="range" min="0" max="100" value="80" title="Volume">
     </div>
   </footer>
 
@@ -118,10 +134,11 @@
 </div>
 
 <div id="sheet" hidden>
-  <header><button class="icon-btn" id="sheet-close" title="Свернуть"><svg class="ic"><use href="#i-down"/></svg></button>
-    <span class="dim">Сейчас играет</span>
-    <button class="icon-btn" id="sheet-queue" title="Очередь"><svg class="ic"><use href="#i-queue"/></svg></button></header>
+  <header><button class="icon-btn" id="sheet-close" title="Collapse"><svg class="ic"><use href="#i-down"/></svg></button>
+    <span class="dim">Now playing</span>
+    <button class="icon-btn" id="sheet-queue" title="Queue"><svg class="ic"><use href="#i-queue"/></svg></button></header>
   <div class="sheet-cover" id="sheet-cover"></div>
+  <canvas id="sheet-viz" class="sheet-viz"></canvas>
   <div class="sheet-text"><div id="sheet-title" class="title"></div><div id="sheet-sub" class="dim"></div></div>
   <div class="timeline"><span id="s-cur" class="time">0:00</span><input id="s-seek" type="range" min="0" max="1000" value="0"><span id="s-dur" class="time">0:00</span></div>
   <div class="buttons big">

@@ -45,7 +45,7 @@ fn column_for(key: &str) -> Option<&'static str> {
         "альбом" | "album" | "al" => "album",
         "жанр" | "genre" | "g" => "genre",
         "название" | "title" | "t" => "title",
-        "метка" | "метки" | "тег" | "tag" | "tags" => "tags",
+        "метка" | "метки" | "тег" | "tag" | "tags" | "label" | "labels" => "tags",
         "файл" | "file" => "file_name",
         _ => return None,
     })

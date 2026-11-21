@@ -28,19 +28,19 @@ impl serde::Serialize for Error {
 
 impl From<rusqlite::Error> for Error {
     fn from(e: rusqlite::Error) -> Self {
-        Error(format!("база: {e}"))
+        Error(format!("database: {e}"))
     }
 }
 
 impl From<std::io::Error> for Error {
     fn from(e: std::io::Error) -> Self {
-        Error(format!("файл: {e}"))
+        Error(format!("file: {e}"))
     }
 }
 
 impl From<lofty::error::LoftyError> for Error {
     fn from(e: lofty::error::LoftyError) -> Self {
-        Error(format!("теги: {e}"))
+        Error(format!("tags: {e}"))
     }
 }
 

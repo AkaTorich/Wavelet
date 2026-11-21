@@ -43,7 +43,7 @@ pub fn groups(state: S<'_>, by: String) -> Result<Vec<Group>> {
         "genres" => browse::genres(&db),
         "dirs" => browse::dirs(&db),
         "tags" => browse::tags(&db),
-        _ => Err(Error::msg(format!("нет такой сводки: {by}"))),
+        _ => Err(Error::msg(format!("no such summary: {by}"))),
     }
 }
 

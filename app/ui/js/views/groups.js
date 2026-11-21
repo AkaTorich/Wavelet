@@ -6,19 +6,19 @@ import { VirtualList } from '../vlist.js';
 import { emptyNode, head } from './common.js';
 
 const KINDS = {
-  artists: { title: 'Исполнители', icon: 'artist', target: 'artist', words: ['исполнитель', 'исполнителя', 'исполнителей'] },
-  genres: { title: 'Жанры', icon: 'genre', target: 'genre', words: ['жанр', 'жанра', 'жанров'] },
-  dirs: { title: 'Папки', icon: 'folder', target: 'folder', words: ['папка', 'папки', 'папок'] },
-  tags: { title: 'Метки', icon: 'tag', target: 'tag', words: ['метка', 'метки', 'меток'] },
+  artists: { title: 'Artists', icon: 'artist', target: 'artist', words: ['artist', 'artists'] },
+  genres: { title: 'Genres', icon: 'genre', target: 'genre', words: ['genre', 'genres'] },
+  dirs: { title: 'Folders', icon: 'folder', target: 'folder', words: ['folder', 'folders'] },
+  tags: { title: 'Labels', icon: 'tag', target: 'tag', words: ['label', 'labels'] },
 };
 
 export async function groups(ctx, { by }) {
   const k = KINDS[by];
-  ctx.setSort([['name', 'По имени'], ['count', 'По числу записей']]);
+  ctx.setSort([['name', 'By name'], ['count', 'By track count']]);
   let items = await api.groups(by);
   if (!items.length) {
-    if (by === 'tags') return emptyNode('tag', 'Меток пока нет', 'Метки ставятся через меню записи (правая кнопка) → «Метки и оценка».');
-    return ctx.noLibrary() || emptyNode(k.icon, 'Пусто', '');
+    if (by === 'tags') return emptyNode('tag', 'No labels yet', 'Set labels from a track’s menu (right click) → “Labels and rating”.');
+    return ctx.noLibrary() || emptyNode(k.icon, 'Empty', '');
   }
   if (ctx.order === 'count') items = items.slice().sort((a, b) => b.count - a.count);
   const open = (g) => (by === 'dirs' ? ctx.go('folder', { dir: g.name }) : ctx.go(k.target, { name: g.name }));

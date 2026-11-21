@@ -38,7 +38,7 @@ class PlaybackService : Service() {
     val channel = "wavelet_playback"
     if (Build.VERSION.SDK_INT >= 26) {
       val nm = getSystemService(NotificationManager::class.java)
-      nm.createNotificationChannel(NotificationChannel(channel, "Проигрывание", NotificationManager.IMPORTANCE_LOW))
+      nm.createNotificationChannel(NotificationChannel(channel, "Playback", NotificationManager.IMPORTANCE_LOW))
     }
     val open = PendingIntent.getActivity(
       this, 0, Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
@@ -47,7 +47,7 @@ class PlaybackService : Service() {
     val builder = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(this, channel) else Notification.Builder(this)
     val note = builder
       .setContentTitle("Wavelet")
-      .setContentText("Играет в фоне")
+      .setContentText("Playing in the background")
       .setSmallIcon(R.drawable.ic_stat_wavelet)
       .setContentIntent(open)
       .setOngoing(true)

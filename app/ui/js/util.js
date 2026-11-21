@@ -51,25 +51,23 @@ export function fmtTime(sec) {
 
 /** Длительность словами для сводок: «2 ч 14 мин», «47 мин». */
 export function fmtLong(sec) {
-  if ((sec || 0) < 60) return `${Math.round(sec || 0)} с`;
+  if ((sec || 0) < 60) return `${Math.round(sec || 0)} s`;
   const m = Math.round(sec / 60);
-  if (m < 60) return `${m} мин`;
+  if (m < 60) return `${m} min`;
   const h = Math.floor(m / 60);
-  return `${h} ч ${m % 60} мин`;
+  return `${h} h ${m % 60} min`;
 }
 
 export function fmtSize(bytes) {
-  const u = ['Б', 'КБ', 'МБ', 'ГБ', 'ТБ'];
+  const u = ['B', 'KB', 'MB', 'GB', 'TB'];
   let i = 0, v = bytes || 0;
   while (v >= 1024 && i < u.length - 1) { v /= 1024; i++; }
   return `${v.toFixed(i && v < 10 ? 1 : 0)} ${u[i]}`;
 }
 
-/** «1 запись», «3 записи», «7 записей». */
-export function plural(n, one, few, many) {
-  const a = Math.abs(n) % 100, b = a % 10;
-  const w = a > 10 && a < 20 ? many : b === 1 ? one : b >= 2 && b <= 4 ? few : many;
-  return `${n} ${w}`;
+/** «1 track», «3 tracks». */
+export function plural(n, one, many) {
+  return `${n} ${n === 1 ? one : many}`;
 }
 
 export function debounce(fn, ms) {

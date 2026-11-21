@@ -6,15 +6,15 @@ import { el, fmtLong, fmtTime, icon, plural, setArt, stars, subline, toast } fro
 import { VirtualList } from '../vlist.js';
 
 export const TRACK_ORDERS = [
-  ['default', 'По порядку'],
-  ['title', 'По названию'],
-  ['artist', 'По исполнителю'],
-  ['album', 'По альбому'],
-  ['year', 'По году'],
-  ['added', 'Новые сверху'],
-  ['duration', 'По длительности'],
-  ['rating', 'По оценке'],
-  ['plays', 'По прослушиваниям'],
+  ['default', 'Default order'],
+  ['title', 'By title'],
+  ['artist', 'By artist'],
+  ['album', 'By album'],
+  ['year', 'By year'],
+  ['added', 'Newest first'],
+  ['duration', 'By length'],
+  ['rating', 'By rating'],
+  ['plays', 'By plays'],
 ];
 
 /** Порядки, где большее — выше. */
@@ -24,11 +24,11 @@ export function countLine(items) {
   const audio = items.filter((m) => m.kind === 'audio').length;
   const video = items.length - audio;
   const parts = [];
-  if (audio) parts.push(plural(audio, 'запись', 'записи', 'записей'));
-  if (video) parts.push(plural(video, 'видео', 'видео', 'видео'));
+  if (audio) parts.push(plural(audio, 'track', 'tracks'));
+  if (video) parts.push(plural(video, 'video', 'videos'));
   const total = items.reduce((s, m) => s + (m.duration || 0), 0);
   if (total) parts.push(fmtLong(total));
-  return parts.join(' · ') || 'пусто';
+  return parts.join(' · ') || 'empty';
 }
 
 export function head({ title, sub, art, artIcon, actions = [] }) {
@@ -42,8 +42,8 @@ export function head({ title, sub, art, artIcon, actions = [] }) {
 export function playButtons(ctx, items) {
   if (!items.length) return [];
   return [
-    el('button.tl-accent', { onclick: () => ctx.player.playList(items, 0) }, icon('play'), 'Играть'),
-    el('button', { onclick: () => ctx.player.playShuffled(items) }, icon('shuffle'), 'Перемешать'),
+    el('button.tl-accent', { onclick: () => ctx.player.playList(items, 0) }, icon('play'), 'Play'),
+    el('button', { onclick: () => ctx.player.playShuffled(items) }, icon('shuffle'), 'Shuffle'),
   ];
 }
 
@@ -68,7 +68,7 @@ function trackRow(ctx, m, i, numbering, opts) {
     el('span.dur', { text: m.duration ? fmtTime(m.duration) : '' }),
     stars(m.rating, async (r) => { await api.setRating(m.id, r); ctx.updated({ ...m, rating: r }); }),
     el('div.lines', {}, el('div.l1', { text: m.title }), el('div.l2', { text: subline(m) })),
-    el('button.icon-btn.row-more', { title: 'Ещё: в список, в очередь, метки…', onclick: (e) => {
+    el('button.icon-btn.row-more', { title: 'More: playlist, queue, labels…', onclick: (e) => {
       e.stopPropagation();
       const r = e.currentTarget.getBoundingClientRect();
       showMenu(r.left - 180, r.bottom, trackMenu(ctx, [m], opts));
@@ -89,8 +89,8 @@ export function trackTable(ctx, items, opts = {}) {
   });
   list.setItems(items);
   ctx.track(items, list);
-  const thead = el('div.thead', {}, el('span', { text: '#' }), el('span', { text: 'Название' }), el('span', { text: 'Исполнитель' }),
-    el('span', { text: 'Альбом' }), el('span', { text: 'Год' }), el('span', { text: 'Время' }), el('span', { text: 'Оценка' }), el('span'));
+  const thead = el('div.thead', {}, el('span', { text: '#' }), el('span', { text: 'Title' }), el('span', { text: 'Artist' }),
+    el('span', { text: 'Album' }), el('span', { text: 'Year' }), el('span', { text: 'Time' }), el('span', { text: 'Rating' }), el('span'));
   return el('div', { style: { display: 'flex', flexDirection: 'column', flex: '1', minHeight: '0' } }, thead, list.root);
 }
 
@@ -98,15 +98,15 @@ export function trackMenu(ctx, sel, opts = {}) {
   if (!sel.length) return [];
   const one = sel.length === 1 ? sel[0] : null;
   const items = [
-    { icon: 'play', text: sel.length > 1 ? `Играть (${sel.length})` : 'Играть', run: () => ctx.player.playList(sel, 0) },
-    { icon: 'next', text: 'Играть следующим', run: () => { ctx.player.playNext(sel); toast('Сыграет следующим'); } },
-    { icon: 'queue', text: 'Добавить в очередь', run: () => { ctx.player.enqueue(sel); toast(`В очереди: ${plural(sel.length, 'запись', 'записи', 'записей')}`); } },
+    { icon: 'play', text: sel.length > 1 ? `Play (${sel.length})` : 'Play', run: () => ctx.player.playList(sel, 0) },
+    { icon: 'next', text: 'Play next', run: () => { ctx.player.playNext(sel); toast('Will play next'); } },
+    { icon: 'queue', text: 'Add to queue', run: () => { ctx.player.enqueue(sel); toast(`Queued: ${plural(sel.length, 'track', 'tracks')}`); } },
     {
-      icon: 'list', text: 'Добавить в список…', run: async () => {
+      icon: 'list', text: 'Add to playlist…', run: async () => {
         const id = await pickPlaylist();
         if (id == null) return;
         await api.playlistAdd(id, sel.map((m) => m.id));
-        toast('Добавлено в список');
+        toast('Added to playlist');
         ctx.refreshNav();
       },
     },
@@ -114,24 +114,24 @@ export function trackMenu(ctx, sel, opts = {}) {
   ];
   if (one) {
     items.push({
-      icon: 'tag', text: 'Метки и оценка…', run: async () => {
+      icon: 'tag', text: 'Labels and rating…', run: async () => {
         const saved = await editUserTags(one, await ctx.tagNames());
         if (saved) ctx.updated(saved);
       },
     });
     items.push({
-      icon: 'settings', text: 'Теги файла…', run: async () => {
+      icon: 'settings', text: 'File tags…', run: async () => {
         const saved = await editTags(one);
         if (saved) ctx.updated(saved);
       },
     });
   } else {
     items.push({
-      icon: 'tag', text: 'Метка для всех…', run: async () => {
-        const name = await prompt('Метка для выбранных', '', 'Метка');
+      icon: 'tag', text: 'Label all…', run: async () => {
+        const name = await prompt('Label for selected', '', 'Label');
         if (!name) return;
         await api.addTag(sel.map((m) => m.id), name);
-        toast(`Метка «${name}» добавлена`);
+        toast(`Label “${name}” added`);
         opts.reload ? opts.reload() : ctx.reload();
       },
     });
@@ -139,16 +139,16 @@ export function trackMenu(ctx, sel, opts = {}) {
   if (one) {
     items.push('sep');
     if (one.kind === 'audio' && one.album) {
-      items.push({ icon: 'album', text: `Альбом «${one.album}»`, run: () => ctx.go('album', { album: one.album, artist: one.album_artist || one.artist }) });
+      items.push({ icon: 'album', text: `Album “${one.album}”`, run: () => ctx.go('album', { album: one.album, artist: one.album_artist || one.artist }) });
     }
     if (one.artist) items.push({ icon: 'artist', text: one.artist, run: () => ctx.go('artist', { name: one.artist }) });
-    items.push({ icon: 'folder', text: 'Эта папка', run: () => ctx.go('folder', { dir: one.dir }) });
-    if (ctx.desktop) items.push({ icon: 'folder', text: 'Показать в проводнике', run: () => api.reveal(one.path) });
+    items.push({ icon: 'folder', text: 'This folder', run: () => ctx.go('folder', { dir: one.dir }) });
+    if (ctx.desktop) items.push({ icon: 'folder', text: 'Show in Explorer', run: () => api.reveal(one.path) });
   }
   if (opts.playlist != null) {
     items.push('sep');
     items.push({
-      icon: 'close', text: 'Убрать из списка', danger: true, run: async () => {
+      icon: 'close', text: 'Remove from playlist', danger: true, run: async () => {
         await api.playlistRemove(sel.map((m) => m.item_id));
         ctx.refreshNav();
         opts.reload ? opts.reload() : ctx.reload();

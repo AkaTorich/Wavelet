@@ -12,7 +12,7 @@ function req(ctx, extra) {
 async function trackView(ctx, { title, sub, artIcon, art, request, empty, numbering, sort = true }) {
   if (sort) ctx.setSort(TRACK_ORDERS);
   const items = await api.list(request);
-  if (!items.length) return empty || emptyNode('music', 'Пусто', 'Здесь пока нет записей.');
+  if (!items.length) return empty || emptyNode('music', 'Empty', 'No tracks here yet.');
   const first = items.find((m) => m.cover);
   return el('div', { style: { display: 'contents' } },
     head({ title, sub: sub ?? countLine(items), artIcon, art: art === undefined ? first?.cover : art, actions: playButtons(ctx, items) }),
@@ -21,16 +21,16 @@ async function trackView(ctx, { title, sub, artIcon, art, request, empty, number
 
 export function music(ctx) {
   return trackView(ctx, {
-    title: 'Музыка', artIcon: 'music', art: null, request: req(ctx, { kind: 'audio' }),
-    empty: ctx.noLibrary() || emptyNode('music', 'Музыки пока нет', 'Добавьте папки в настройках — программа сама найдёт записи.',
-      el('button.tl-accent', { onclick: () => ctx.go('settings') }, icon('folder'), 'Папки библиотеки')),
+    title: 'Music', artIcon: 'music', art: null, request: req(ctx, { kind: 'audio' }),
+    empty: ctx.noLibrary() || emptyNode('music', 'No music yet', 'Add folders in Settings — Wavelet will find the tracks.',
+      el('button.tl-accent', { onclick: () => ctx.go('settings') }, icon('folder'), 'Library folders')),
   });
 }
 
 export function search(ctx, { q }) {
   return trackView(ctx, {
-    title: `Поиск: ${q}`, artIcon: 'search', art: null, request: req(ctx, { query: q }),
-    empty: emptyNode('search', 'Ничего не нашлось', 'Можно уточнять: исполнитель:имя, альбом:…, жанр:…, год:1990-1999, метка:…, вид:видео, папка:…'),
+    title: `Search: ${q}`, artIcon: 'search', art: null, request: req(ctx, { query: q }),
+    empty: emptyNode('search', 'Nothing found', 'Narrow it down: artist:name, album:…, genre:…, year:1990-1999, label:…, type:video, folder:…'),
   });
 }
 
@@ -52,23 +52,23 @@ export function tag(ctx, { name }) {
 
 export function recent(ctx) {
   return trackView(ctx, {
-    title: 'Недавно добавленные', artIcon: 'recent', art: null, sort: false,
+    title: 'Recently added', artIcon: 'recent', art: null, sort: false,
     request: { order: 'added', desc: true, limit: 500 },
   });
 }
 
 export function frequent(ctx) {
   return trackView(ctx, {
-    title: 'Часто играемые', artIcon: 'frequent', art: null, sort: false,
+    title: 'Most played', artIcon: 'frequent', art: null, sort: false,
     request: { order: 'plays', desc: true, limit: 300 },
-    empty: emptyNode('frequent', 'Пока пусто', 'Сюда попадают записи, прослушанные хотя бы наполовину.'),
+    empty: emptyNode('frequent', 'Nothing yet', 'Tracks played at least halfway show up here.'),
   });
 }
 
 export function history(ctx) {
   return trackView(ctx, {
-    title: 'Недавно игравшие', artIcon: 'recent', art: null, sort: false,
+    title: 'Recently played', artIcon: 'recent', art: null, sort: false,
     request: { order: 'played', desc: true, limit: 300 },
-    empty: emptyNode('recent', 'Пока пусто', 'Здесь будет то, что вы слушали и смотрели.'),
+    empty: emptyNode('recent', 'Nothing yet', 'What you listen to and watch will show up here.'),
   });
 }

@@ -6,6 +6,7 @@ import { hideMenu, pickPlaylist, showMenu } from './menu.js';
 import { Player } from './player.js';
 import { bindPlayerUI } from './playerui.js';
 import { bindQueue } from './queue.js';
+import { bindTitlebar } from './titlebar.js';
 import { $, debounce, el, icon, isPhone, plural, toast } from './util.js';
 import { DRAG_TYPE } from './vlist.js';
 import * as lib from './views/library.js';
@@ -28,10 +29,10 @@ const VIEWS = {
 const PARENT = { album: 'albums', artist: 'artists', genre: 'genres', folder: 'folders', tag: 'tags' };
 
 const NAV = [
-  ['music', 'music', 'Музыка'], ['albums', 'album', 'Альбомы'], ['artists', 'artist', 'Исполнители'],
-  ['genres', 'genre', 'Жанры'], ['video', 'video', 'Видео'], ['folders', 'folder', 'Папки'], ['tags', 'tag', 'Метки'],
-  ['recent', 'recent', 'Недавние'], ['frequent', 'frequent', 'Часто играемые'], ['history', 'recent', 'История'],
-  ['settings', 'settings', 'Настройки'],
+  ['music', 'music', 'Music'], ['albums', 'album', 'Albums'], ['artists', 'artist', 'Artists'],
+  ['genres', 'genre', 'Genres'], ['video', 'video', 'Video'], ['folders', 'folder', 'Folders'], ['tags', 'tag', 'Labels'],
+  ['recent', 'recent', 'Recent'], ['frequent', 'frequent', 'Most played'], ['history', 'recent', 'History'],
+  ['settings', 'settings', 'Settings'],
 ];
 
 const media = $('#media');
@@ -94,9 +95,9 @@ const ctx = {
 
   noLibrary() {
     if (folders.length) return null;
-    return emptyNode('wave', 'Добро пожаловать в Wavelet',
-      'Укажите папки с музыкой и видео — программа обойдёт их, прочтёт теги и обложки и составит библиотеку с поиском.',
-      el('button.tl-accent', { onclick: () => ctx.go('settings') }, icon('folder'), 'Выбрать папки'));
+    return emptyNode('wave', 'Welcome to Wavelet',
+      'Choose folders with music and video — Wavelet will scan them, read tags and covers and build a searchable library.',
+      el('button.tl-accent', { onclick: () => ctx.go('settings') }, icon('folder'), 'Choose folders'));
   },
 
   async refreshNav() {
@@ -108,12 +109,12 @@ const ctx = {
       b.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         showMenu(e.clientX, e.clientY, [
-          { icon: 'play', text: 'Играть', run: () => playPlaylist(ctx, p) },
-          { icon: 'shuffle', text: 'Перемешать', run: () => playPlaylist(ctx, p, true) },
-          { icon: 'plus', text: 'Добавить записи…', run: () => addTracksTo(ctx, p) },
+          { icon: 'play', text: 'Play', run: () => playPlaylist(ctx, p) },
+          { icon: 'shuffle', text: 'Shuffle', run: () => playPlaylist(ctx, p, true) },
+          { icon: 'plus', text: 'Add tracks…', run: () => addTracksTo(ctx, p) },
           'sep',
-          { icon: 'settings', text: 'Переименовать…', run: () => renamePlaylist(ctx, p) },
-          { icon: 'close', text: 'Удалить список', danger: true, run: () => deletePlaylist(ctx, p) },
+          { icon: 'settings', text: 'Rename…', run: () => renamePlaylist(ctx, p) },
+          { icon: 'close', text: 'Delete playlist', danger: true, run: () => deletePlaylist(ctx, p) },
         ]);
       });
       b.addEventListener('dragover', (e) => { if (e.dataTransfer.types.includes(DRAG_TYPE)) { e.preventDefault(); b.classList.add('drop'); } });
@@ -124,7 +125,7 @@ const ctx = {
         if (!ids.length) return;
         e.preventDefault();
         await api.playlistAdd(p.id, ids);
-        toast(`В «${p.name}»: ${plural(ids.length, 'запись', 'записи', 'записей')}`);
+        toast(`To “${p.name}”: ${plural(ids.length, 'track', 'tracks')}`);
         ctx.refreshNav();
       });
       return b;
@@ -146,7 +147,7 @@ async function render(keepOrder = false) {
     curList = null;
     node = await VIEWS[view](ctx, params);
   } catch (e) {
-    node = emptyNode('close', 'Ошибка', String(e));
+    node = emptyNode('close', 'Error', String(e));
   }
   if (token !== renderToken) return;
   $('#view').replaceChildren(node);
@@ -165,17 +166,17 @@ function buildNav() {
   $('#nav-main').replaceChildren(...NAV.map(([view, ic, text]) =>
     el('button.nav-item', { 'data-view': view, onclick: () => ctx.go(view) }, icon(ic), el('span', { text }))));
   const cap = $('.nav-caption');
-  cap.append(el('button.icon-btn', { title: 'Новый список', onclick: () => createPlaylist(ctx) }, icon('plus')));
+  cap.append(el('button.icon-btn', { title: 'New playlist', onclick: () => createPlaylist(ctx) }, icon('plus')));
 
-  const more = [['artists', 'artist', 'Исполнители'], ['genres', 'genre', 'Жанры'], ['folders', 'folder', 'Папки'], ['tags', 'tag', 'Метки'],
-    ['recent', 'recent', 'Недавние'], ['frequent', 'frequent', 'Часто играемые'], ['history', 'recent', 'История'], ['settings', 'settings', 'Настройки']];
+  const more = [['artists', 'artist', 'Artists'], ['genres', 'genre', 'Genres'], ['folders', 'folder', 'Folders'], ['tags', 'tag', 'Labels'],
+    ['recent', 'recent', 'Recent'], ['frequent', 'frequent', 'Most played'], ['history', 'recent', 'History'], ['settings', 'settings', 'Settings']];
   const tab = (view, ic, text) => el('button', { 'data-view': view, onclick: () => ctx.go(view) }, icon(ic), text);
   const moreBtn = el('button', { onclick: () => {
     const r = moreBtn.getBoundingClientRect();
     showMenu(r.right, r.top - 330, more.map(([v, ic, t]) => ({ icon: ic, text: t, run: () => ctx.go(v) })));
-  } }, icon('more'), 'Ещё');
-  $('#tabs').replaceChildren(tab('music', 'music', 'Музыка'), tab('albums', 'album', 'Альбомы'), tab('video', 'video', 'Видео'),
-    tab('playlists', 'list', 'Списки'), moreBtn);
+  } }, icon('more'), 'More');
+  $('#tabs').replaceChildren(tab('music', 'music', 'Music'), tab('albums', 'album', 'Albums'), tab('video', 'video', 'Video'),
+    tab('playlists', 'list', 'Playlists'), moreBtn);
 }
 
 function bindTop() {
@@ -219,6 +220,7 @@ function bindKeys(ui, queue) {
       if (e.ctrlKey) { e.preventDefault(); $('#search').focus(); $('#search').select(); } else ui.toggleFull();
     } else if (k === 'm' || k === 'ь') player.toggleMute();
     else if (k === 'q' || k === 'й') queue.toggle();
+    else if (k === 'v' || k === 'V' || k === 'м' || k === 'М') ui.toggleViz();
     else if (k === 'Escape') {
       if (ui.isFull()) ui.setFull(false);
       else if (!$('#sheet').hidden) $('#sheet').hidden = true;
@@ -245,29 +247,30 @@ function bindScan() {
   const box = $('#scan-status');
   listen('scan-progress', (p) => {
     box.hidden = false;
-    $('#scan-text').textContent = p.total ? `Обход: ${p.done} из ${p.total}` : 'Поиск файлов…';
+    $('#scan-text').textContent = p.total ? `Scanning: ${p.done} of ${p.total}` : 'Looking for files…';
     $('#scan-bar').value = p.total ? p.done / p.total : 0;
   });
   listen('scan-done', async (r) => {
     box.hidden = true;
     folders = await api.folders();
     const parts = [];
-    if (r.added) parts.push(`новых ${r.added}`);
-    if (r.updated) parts.push(`изменено ${r.updated}`);
-    if (r.removed) parts.push(`убрано ${r.removed}`);
+    if (r.added) parts.push(`${r.added} new`);
+    if (r.updated) parts.push(`${r.updated} changed`);
+    if (r.removed) parts.push(`${r.removed} removed`);
     if (parts.length) {
-      toast(`Библиотека: ${parts.join(', ')}`);
+      toast(`Library: ${parts.join(', ')}`);
       if (current.view !== 'search' || !$('#search').matches(':focus')) render(true);
     }
     ctx.refreshNav();
   });
-  listen('scan-error', (msg) => { box.hidden = true; toast(`Обход прерван: ${msg}`, 5000); });
+  listen('scan-error', (msg) => { box.hidden = true; toast(`Scan stopped: ${msg}`, 5000); });
 }
 
 async function main() {
   const os = await api.platform().catch(() => 'windows');
   ctx.desktop = !['android', 'ios'].includes(os);
   document.body.classList.add(ctx.desktop ? 'desktop' : 'mobile');
+  if (ctx.desktop) bindTitlebar();
   buildNav();
   bindTop();
   const queue = bindQueue(player, ctx);
@@ -277,7 +280,7 @@ async function main() {
       const id = await pickPlaylist();
       if (id == null) return;
       await api.playlistAdd(id, items.map((m) => m.id));
-      toast(`Добавлено в список: ${items.length === 1 ? items[0].title : plural(items.length, 'запись', 'записи', 'записей')}`);
+      toast(`Added to playlist: ${items.length === 1 ? items[0].title : plural(items.length, 'track', 'tracks')}`);
       ctx.refreshNav();
       if (current.view === 'playlist' && current.params.id === id) ctx.reload();
     },

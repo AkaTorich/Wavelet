@@ -59,6 +59,34 @@ h1, h2 { margin: 0; }
   grid-template-rows: 1fr var(--bar-h) auto;
   grid-template-areas: "nav main queue" "bar bar bar" "tabs tabs tabs";
 }
+/* ── свой заголовок окна (только ПК; системная рамка выключена) ── */
+#titlebar {
+  height: var(--title-h, 32px); display: none; align-items: center; gap: 10px; padding-left: 12px;
+  background: linear-gradient(90deg, rgba(252, 238, 10, .07), rgba(0, 0, 0, .35) 40%, rgba(0, 240, 255, .05));
+  border-bottom: 1px solid var(--tl-card-border, var(--line));
+  box-shadow: 0 1px 10px rgba(252, 238, 10, .12);
+  position: relative; z-index: 5;
+}
+#titlebar .tb-logo { width: 30px; height: 15px; color: var(--accent); flex: none; pointer-events: none; }
+#tb-title {
+  flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; pointer-events: none;
+  font-family: var(--tl-title-font, var(--tl-font)); font-size: 12px; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--tl-accent2, var(--dim));
+}
+.tb-btn {
+  appearance: none; display: inline-flex; align-items: center; justify-content: center;
+  width: 46px; height: 100%; margin: 0; padding: 0; border: 0; border-radius: 0;
+  background: transparent; color: var(--dim); box-shadow: none; cursor: default;
+}
+.tb-btn .ic { width: 16px; height: 16px; }
+.tb-btn:hover { background: var(--hover); color: var(--accent); box-shadow: none; border: 0; }
+.tb-btn.close:hover { background: var(--tl-danger, #e81123); color: #fff; }
+.tb-btn:active { filter: brightness(1.2); }
+body.desktop #titlebar { display: flex; }
+body.desktop #app { height: calc(100% - var(--title-h, 32px)); }
+body.full #titlebar { display: none !important; }
+body.full #app { height: 100%; }
+
 #nav { grid-area: nav; }
 #main { grid-area: main; }
 #queue { grid-area: queue; }

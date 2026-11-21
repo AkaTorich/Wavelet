@@ -40,6 +40,16 @@ input[type=range]::-webkit-slider-runnable-track {
 }
 #stage-close { position: absolute; right: 12px; top: 10px; color: #fff; background: rgba(0, 0, 0, .35); opacity: 0; transition: opacity .2s; }
 #stage:hover #stage-title, #stage:hover #stage-close, #stage.ui #stage-title, #stage.ui #stage-close { opacity: 1; }
+/* визуализация музыки на месте видео */
+#stage.viz { background: radial-gradient(ellipse at 50% 70%, rgba(252, 238, 10, .06), transparent 60%), var(--tl-window-bg, #07070d); }
+#viz { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: pointer; }
+#stage.viz #stage-title { opacity: 1; background: none; color: var(--tl-accent2, #fff); letter-spacing: .06em; }
+#viz-mode {
+  position: absolute; right: 56px; top: 12px; padding: 4px 12px; margin: 0; font-size: 11px; letter-spacing: .12em;
+  text-transform: uppercase; opacity: 0; transition: opacity .2s;
+}
+#stage:hover #viz-mode, #stage.ui #viz-mode { opacity: 1; }
+.sheet-viz { width: 100%; height: 11vh; margin: -2vh 0 1vh; display: block; }
 video::cue { background: rgba(0, 0, 0, .6); font-size: 1.15em; }
 #media:not(.shown) { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 

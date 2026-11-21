@@ -246,7 +246,7 @@ export class Player extends EventTarget {
       this.subsUrl = URL.createObjectURL(new Blob([vtt], { type: 'text/vtt' }));
       const tr = document.createElement('track');
       tr.kind = 'subtitles';
-      tr.label = 'Субтитры';
+      tr.label = 'Subtitles';
       tr.src = this.subsUrl;
       tr.default = true;
       this.m.append(tr);
@@ -314,7 +314,7 @@ export class Player extends EventTarget {
   failed() {
     const m = this.current;
     if (!m || !this.m.getAttribute('src')) return;
-    toast(`Не открывается: ${m.file_name}`);
+    toast(`Cannot open: ${m.file_name}`);
     this.errors++;
     if (this.errors < this.queue.length && this.index < this.queue.length - 1) setTimeout(() => this.next(true), 900);
   }

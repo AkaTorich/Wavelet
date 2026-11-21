@@ -8,14 +8,14 @@ import { debounce, el, fmtTime, icon, setArt, subline } from './util.js';
 /** Возвращает id выбранных записей (в порядке выбора) или null. */
 export async function pickTracks(title) {
   const chosen = new Map(); // id → запись
-  const input = el('input', { type: 'search', placeholder: 'Название, исполнитель, альбом, жанр, метка…' });
+  const input = el('input', { type: 'search', placeholder: 'Title, artist, album, genre, label…' });
   const list = el('div.pick-tracks');
   const count = el('span.dim');
   let addBtn = null;
 
   const updateCount = () => {
-    count.textContent = chosen.size ? `Отмечено: ${chosen.size}` : 'Ничего не отмечено';
-    if (addBtn) addBtn.textContent = chosen.size ? `Добавить (${chosen.size})` : 'Добавить';
+    count.textContent = chosen.size ? `Selected: ${chosen.size}` : 'Nothing selected';
+    if (addBtn) addBtn.textContent = chosen.size ? `Add (${chosen.size})` : 'Add';
   };
 
   const row = (m) => {
@@ -42,21 +42,21 @@ export async function pickTracks(title) {
   const load = async () => {
     const q = input.value.trim();
     const items = await api.list({ query: q, order: q ? 'default' : 'added', desc: !q, limit: 300 });
-    list.replaceChildren(...(items.length ? items.map(row) : [el('div.dim.pt-empty', { text: 'Ничего не нашлось' })]));
+    list.replaceChildren(...(items.length ? items.map(row) : [el('div.dim.pt-empty', { text: 'Nothing found' })]));
   };
   input.addEventListener('input', debounce(load, 200));
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') e.preventDefault(); });
 
   const selectAll = el('button', { type: 'button', onclick: () => {
     for (const r of list.querySelectorAll('.pt-row input')) if (!r.checked) { r.checked = true; r.dispatchEvent(new Event('change')); }
-  } }, icon('plus'), 'Отметить все найденные');
+  } }, icon('plus'), 'Select all found');
 
   const body = el('div', {}, el('div.pt-search', {}, icon('search'), input), list, el('div.pt-foot', {}, count, selectAll));
   updateCount();
   load();
   const done = modal(title, body, [
-    { text: 'Отмена', result: null },
-    { text: 'Добавить', accent: true, value: () => (chosen.size ? [...chosen.keys()] : undefined) },
+    { text: 'Cancel', result: null },
+    { text: 'Add', accent: true, value: () => (chosen.size ? [...chosen.keys()] : undefined) },
   ]);
   // кнопка «Добавить» уже в окне — подписать её числом отмеченного
   setTimeout(() => { addBtn = document.querySelector('#modal-host .modal:last-child .buttons .tl-accent'); updateCount(); });

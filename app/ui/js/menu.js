@@ -71,18 +71,18 @@ export function modal(title, body, buttons) {
   });
 }
 
-export async function ask(title, text, okText = 'Да', danger = false) {
+export async function ask(title, text, okText = 'Yes', danger = false) {
   return modal(title, el('p', { text }), [
-    { text: 'Отмена', result: false },
+    { text: 'Cancel', result: false },
     { text: okText, result: true, accent: !danger, danger },
   ]);
 }
 
-export async function prompt(title, value = '', label = 'Название') {
+export async function prompt(title, value = '', label = 'Title') {
   const input = el('input', { type: 'text', value });
   return modal(title, el('label', {}, label, input), [
-    { text: 'Отмена', result: null },
-    { text: 'Готово', accent: true, value: () => input.value.trim() || undefined },
+    { text: 'Cancel', result: null },
+    { text: 'Done', accent: true, value: () => input.value.trim() || undefined },
   ]);
 }
 
@@ -93,24 +93,24 @@ export async function editTags(m) {
     return [el('label' + cls, {}, label, input), input];
   };
   const fields = {
-    title: f('title', 'Название', m.title, '.wide'),
-    artist: f('artist', 'Исполнитель', m.artist),
-    album_artist: f('album_artist', 'Исполнитель альбома', m.album_artist),
-    album: f('album', 'Альбом', m.album, '.wide'),
-    genre: f('genre', 'Жанр', m.genre),
-    year: f('year', 'Год', m.year),
-    track: f('track', 'Номер дорожки', m.track),
-    disc: f('disc', 'Диск', m.disc),
+    title: f('title', 'Title', m.title, '.wide'),
+    artist: f('artist', 'Artist', m.artist),
+    album_artist: f('album_artist', 'Album artist', m.album_artist),
+    album: f('album', 'Album', m.album, '.wide'),
+    genre: f('genre', 'Genre', m.genre),
+    year: f('year', 'Year', m.year),
+    track: f('track', 'Track number', m.track),
+    disc: f('disc', 'Disc', m.disc),
   };
   const body = el('div', {},
     el('div.grid', {}, Object.values(fields).map(([label]) => label)),
-    el('div.note', { text: m.kind === 'audio' ? 'Записывается в сам файл и в библиотеку.' : 'У видео теги хранятся только в библиотеке.' }),
+    el('div.note', { text: m.kind === 'audio' ? 'Written to the file itself and to the library.' : 'Video tags are kept in the library only.' }),
     el('div.note', { text: m.path }));
   const num = (v) => { const n = parseInt(v, 10); return Number.isFinite(n) && n > 0 ? n : null; };
-  const edit = await modal('Теги', body, [
-    { text: 'Отмена', result: null },
+  const edit = await modal('Tags', body, [
+    { text: 'Cancel', result: null },
     {
-      text: 'Сохранить', accent: true, value: () => {
+      text: 'Save', accent: true, value: () => {
         const v = (k) => fields[k][1].value;
         return {
           title: v('title'), artist: v('artist'), album_artist: v('album_artist'), album: v('album'), genre: v('genre'),
@@ -122,10 +122,10 @@ export async function editTags(m) {
   if (!edit) return null;
   try {
     const saved = await api.editTags(m.id, edit);
-    toast('Теги сохранены');
+    toast('Tags saved');
     return saved;
   } catch (e) {
-    toast(`Не удалось записать: ${e}`, 5000);
+    toast(`Could not write: ${e}`, 5000);
     return null;
   }
 }
@@ -135,12 +135,12 @@ export async function editUserTags(m, known = []) {
   let tags = [...m.tags];
   let rating = m.rating;
   const chips = el('div.chips');
-  const input = el('input', { type: 'text', list: 'tag-names', placeholder: 'Новая метка и Enter' });
+  const input = el('input', { type: 'text', list: 'tag-names', placeholder: 'New label, then Enter' });
   const list = el('datalist#tag-names', {}, known.map((t) => el('option', { value: t })));
   const starBox = el('div');
   const draw = () => {
     chips.replaceChildren(...tags.map((t) => el('span.chip', {}, t,
-      el('button.icon-btn', { type: 'button', title: 'Убрать', onclick: () => { tags = tags.filter((x) => x !== t); draw(); } }, icon('close')))));
+      el('button.icon-btn', { type: 'button', title: 'Remove', onclick: () => { tags = tags.filter((x) => x !== t); draw(); } }, icon('close')))));
     starBox.replaceChildren(stars(rating, (r) => { rating = r; draw(); }));
   };
   input.addEventListener('keydown', (e) => {
@@ -154,10 +154,10 @@ export async function editUserTags(m, known = []) {
     }
   });
   draw();
-  const body = el('div', {}, el('label', {}, 'Оценка', starBox), el('label', {}, 'Метки', chips), input, list,
-    el('div.note', { text: 'Метки ищутся поиском так же, как названия: «метка:имя» или просто слово.' }));
-  const ok = await modal(m.title, body, [{ text: 'Отмена', result: false }, {
-    text: 'Сохранить', accent: true, value: () => {
+  const body = el('div', {}, el('label', {}, 'Rating', starBox), el('label', {}, 'Labels', chips), input, list,
+    el('div.note', { text: 'Labels are searchable like titles: “label:name” or just the word.' }));
+  const ok = await modal(m.title, body, [{ text: 'Cancel', result: false }, {
+    text: 'Save', accent: true, value: () => {
       const v = input.value.trim();
       if (v && !tags.includes(v)) tags.push(v);
       return true;
@@ -174,7 +174,7 @@ export async function pickPlaylist() {
   const lists = await api.playlists();
   let chosen = null;
   const pick = el('div.pick');
-  const nameInput = el('input', { type: 'text', placeholder: 'или новый список — название' });
+  const nameInput = el('input', { type: 'text', placeholder: 'or a new playlist — name' });
   for (const p of lists) {
     const row = el('button.nav-item', { type: 'button', onclick: () => {
       chosen = p.id;
@@ -183,9 +183,9 @@ export async function pickPlaylist() {
     } }, icon('list'), el('span', { text: p.name }), el('small', { text: String(p.count) }));
     pick.append(row);
   }
-  const body = el('div', {}, lists.length ? pick : el('p.dim', { text: 'Списков пока нет.' }), nameInput);
-  return modal('В список', body, [{ text: 'Отмена', result: null }, {
-    text: 'Добавить', accent: true, value: async () => {
+  const body = el('div', {}, lists.length ? pick : el('p.dim', { text: 'No playlists yet.' }), nameInput);
+  return modal('To playlist', body, [{ text: 'Cancel', result: null }, {
+    text: 'Add', accent: true, value: async () => {
       const name = nameInput.value.trim();
       if (name) return api.playlistCreate(name);
       return chosen ?? undefined;

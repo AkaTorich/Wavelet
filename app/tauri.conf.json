@@ -17,7 +17,9 @@
         "minWidth": 380,
         "minHeight": 520,
         "center": true,
-        "dragDropEnabled": false
+        "dragDropEnabled": false,
+        "decorations": false,
+        "shadow": true
       }
     ],
     "security": {
@@ -35,7 +37,7 @@
     "active": true,
     "targets": "all",
     "category": "Music",
-    "shortDescription": "Плеер музыки и видео с библиотекой и поиском",
+    "shortDescription": "Music and video player with a library and search",
     "copyright": "O.V.K",
     "icon": [
       "icons/32x32.png",
@@ -46,7 +48,7 @@
     ],
     "windows": {
       "nsis": {
-        "languages": ["Russian", "English"],
+        "languages": ["English"],
         "displayLanguageSelector": false,
         "installMode": "currentUser"
       }

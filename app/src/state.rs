@@ -30,7 +30,7 @@ impl AppState {
     }
 
     pub fn db(&self) -> Result<MutexGuard<'_, Connection>> {
-        self.db.lock().map_err(|_| Error::msg("база занята после сбоя"))
+        self.db.lock().map_err(|_| Error::msg("database is locked after a crash"))
     }
 
     pub fn is_scanning(&self) -> bool {

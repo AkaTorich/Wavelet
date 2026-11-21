@@ -50,5 +50,5 @@ pub fn run() {
             commands::platform,
         ])
         .run(tauri::generate_context!())
-        .expect("Wavelet не запустился");
+        .expect("Wavelet failed to start");
 }
