@@ -266,6 +266,9 @@ function bindScan() {
   listen('scan-error', (msg) => { box.hidden = true; toast(`Scan stopped: ${msg}`, 5000); });
 }
 
+// Меню WebView по правой кнопке (Назад, Обновить, Печать…) не показывается — кроме полей ввода (копировать, вставить).
+document.addEventListener('contextmenu', (e) => { if (!e.target.closest('input, textarea')) e.preventDefault(); });
+
 async function main() {
   const os = await api.platform().catch(() => 'windows');
   ctx.desktop = !['android', 'ios'].includes(os);
