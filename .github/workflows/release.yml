@@ -142,13 +142,22 @@ jobs:
         run: |
           brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
           cargo tauri ios init --ci
+      - name: Turn off signing
+        working-directory: app/gen/apple
+        run: |
+          # в каждый набор настроек проекта Xcode — без подписи (настройки проекта главнее XCODE_XCCONFIG_FILE)
+          for f in $(find . -name project.pbxproj); do
+            perl -0pi -e 's/buildSettings = \{/buildSettings = {\n\t\t\t\tCODE_SIGNING_ALLOWED = NO;\n\t\t\t\tCODE_SIGNING_REQUIRED = NO;\n\t\t\t\tCODE_SIGN_IDENTITY = "";\n\t\t\t\tEXPANDED_CODE_SIGN_IDENTITY = "";/g; s/^\s*(DEVELOPMENT_TEAM|CODE_SIGN_STYLE|PROVISIONING_PROFILE_SPECIFIER|CODE_SIGN_ENTITLEMENTS) = [^;]*;\n//mg' "$f"
+          done
+          # project.yml — на случай, если сборка заново создаст проект из него
+          if [ -f project.yml ]; then
+            perl -pi -e 's/^(\s*)base:\s*$/$1base:\n$1  CODE_SIGNING_ALLOWED: NO\n$1  CODE_SIGNING_REQUIRED: NO\n$1  CODE_SIGN_IDENTITY: ""/' project.yml
+          fi
+          grep -c "CODE_SIGNING_ALLOWED = NO" $(find . -name project.pbxproj)
       - name: Build (unsigned)
         working-directory: app
         continue-on-error: true # выгрузка из архива требует подписи и падает — сам .app к этому времени готов
-        run: |
-          printf 'CODE_SIGNING_ALLOWED = NO\nCODE_SIGNING_REQUIRED = NO\nCODE_SIGN_IDENTITY =\nCODE_SIGN_ENTITLEMENTS =\nDEVELOPMENT_TEAM =\nPROVISIONING_PROFILE_SPECIFIER =\n' > "$RUNNER_TEMP/nosign.xcconfig"
-          export XCODE_XCCONFIG_FILE="$RUNNER_TEMP/nosign.xcconfig"
-          cargo tauri ios build --target aarch64 --ci
+        run: cargo tauri ios build --target aarch64 --ci
       - name: Collect
         run: |
           v=$(jq -r .version app/tauri.conf.json)
