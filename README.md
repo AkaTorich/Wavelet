@@ -54,6 +54,10 @@ Rust ставится через rustup, tauri-cli — `cargo install tauri-cli 
 - Windows: `cargo build --release -p wavelet --jobs 2` → `target\release\Wavelet.exe`;
   установщик: в `app` — `cargo tauri build --bundles nsis -- --jobs 2` → `target\release\bundle\nsis\`.
   Готовые exe и установщик копируются в корень.
+- Релиз для всех платформ — на GitHub (репозиторий открытый): метка `vX.Y.Z` → `.github/workflows/release.yml`
+  собирает Windows (установщик и переносной exe), macOS (dmg для Intel и Apple Silicon), Linux (deb, rpm, AppImage),
+  Android (apk; подпись своим ключом из секретов `ANDROID_KEYSTORE_B64` и `ANDROID_KEYSTORE_PROPERTIES`, без них —
+  временным ключом), iPhone (неподписанный ipa для AltStore / Sideloadly) и выкладывает релиз.
 - Android: `powershell -ExecutionPolicy Bypass -File tools\build-android.ps1` → `Wavelet.apk` в корне.
   Набор Android (JDK 17, SDK, NDK 27.2, Gradle) берётся с внешнего диска `<буква>:\JavaSDK` (`tools\android-env.ps1`
   ищет его сам). Библиотеки Rust собирает Tauri, но его последний шаг (символьная ссылка) без прав администратора падает,
